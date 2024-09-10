@@ -100,6 +100,22 @@ function Sidebar(props) {
                     ),
                     path: null,
                 },
+
+                {
+                    name: Lang.get('navigation.tasks'),
+                    icon: (
+                        <Tooltip
+                            title={
+                                minimized ? Lang.get('navigation.tasks') : ''
+                            }
+                        >
+                            <PeopleIcon />
+                        </Tooltip>
+                    ),
+                    path: NavigationUtils.route(
+                        'backoffice.resources.tasks.index',
+                    ),
+                },
             ],
         },
 
