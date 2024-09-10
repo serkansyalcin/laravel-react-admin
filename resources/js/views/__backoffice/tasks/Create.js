@@ -1,40 +1,28 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import {
     Paper,
-    Step,
-    StepLabel,
-    Stepper,
     Typography,
     withStyles,
 } from '@material-ui/core';
 
-import * as NavigationUtils from '../../../helpers/Navigation';
-import { User } from '../../../models';
 import { LinearIndeterminate } from '../../../ui/Loaders';
 import { Master as MasterLayout } from '../layouts';
 
 import { Profile, Account, Avatar } from './Forms';
+import Task from '../../../models/Task';
+import { User } from '../../../models';
 
 function Create(props) {
     const [loading, setLoading] = useState(false);
     const [activeStep, setActiveStep] = useState(0);
     const [formValues, setFormValues] = useState([]);
-    const [user, setUser] = useState({});
+    const [task, setTask] = useState({});
     const [message, setMessage] = useState({});
-
-    /**
-     * This should return back to the previous step.
-     *
-     * @return {undefined}
-     */
-    const handleBack = () => {
-        setActiveStep(activeStep - 1);
-    };
-
+    const [users, setUsers] = useState({});
     /**
      * Handle form submit, this should send an API response
-     * to create a user.
+     * to create a task.
      *
      * @param {object} values
      *
@@ -43,47 +31,33 @@ function Create(props) {
      * @return {undefined}
      */
     const handleSubmit = async (values, { setSubmitting, setErrors }) => {
+        console.log('im here');
         setSubmitting(false);
-
-        // Stop here as it is the last step...
-        if (activeStep === 2) {
-            return;
-        }
 
         setLoading(true);
 
         try {
             let previousValues = {};
 
-            // Merge the form values here.
-            if (activeStep === 1) {
-                previousValues = formValues.reduce((prev, next) => {
-                    return { ...prev, ...next };
-                });
-            }
-
             // Instruct the API the current step.
             values.step = activeStep;
-
-            const user = await User.store({ ...previousValues, ...values });
+            const task = await Task.store({ ...previousValues, ...values });
 
             // After persisting the previous values. Move to the next step...
             let newFormValues = [...formValues];
             newFormValues[activeStep] = values;
 
-            if (activeStep === 1) {
-                setMessage({
-                    type: 'success',
-                    body: Lang.get('resources.created', {
-                        name: 'User',
-                    }),
-                    closed: () => setMessage({}),
-                });
-            }
+            setMessage({
+                type: 'success',
+                body: Lang.get('resources.created', {
+                    name: 'Task',
+                }),
+                closed: () => setMessage({}),
+            });
 
             setLoading(false);
             setFormValues(newFormValues);
-            setUser(user);
+            setTask(task);
             setActiveStep(activeStep + 1);
         } catch (error) {
             if (!error.response) {
@@ -101,6 +75,23 @@ function Create(props) {
     const { classes, ...other } = props;
     const { history } = props;
 
+    const fetchUser = async id => {
+        setLoading(true);
+
+        try {
+            const users = await User.all();
+
+            setUsers(users);
+            setLoading(false);
+        } catch (error) {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchUser();
+    }, []);
+
     const renderForm = () => {
         const defaultProfileValues = {
             title: '',
@@ -115,6 +106,7 @@ function Create(props) {
                         values={
                             formValues[0] ? formValues[0] : defaultProfileValues
                         }
+                        allUsers={users}
                         handleSubmit={handleSubmit}
                     />
                 )
@@ -140,18 +132,6 @@ function Create(props) {
                         >
                             Task Creation
                         </Typography>
-
-                        {/*<Stepper*/}
-                        {/*    activeStep={activeStep}*/}
-                        {/*    className={classes.stepper}*/}
-                        {/*>*/}
-                        {/*    {steps.map(name => (*/}
-                        {/*        <Step key={name}>*/}
-                        {/*            <StepLabel>{name}</StepLabel>*/}
-                        {/*        </Step>*/}
-                        {/*    ))}*/}
-                        {/*</Stepper>*/}
-
                         {renderForm()}
                     </div>
                 </Paper>

@@ -12,7 +12,6 @@ import {
     InputLabel,
     MenuItem,
     Select,
-    Typography,
     withStyles,
 } from '@material-ui/core';
 
@@ -20,21 +19,44 @@ import { MuiPickersUtilsProvider, DatePicker } from 'material-ui-pickers';
 import MomentUtils from '@date-io/moment';
 
 const Profile = props => {
-    const { classes, values, handleSubmit } = props;
+    const { classes, values, handleSubmit, allUsers } = props;
+
+    let userDropdown = allUsers.map(function(user) {
+        return <MenuItem key={user.id} value={user.id}>{user.name}</MenuItem>;
+    });
 
     return (
         <Formik
             initialValues={values}
             validationSchema={Yup.object().shape({
-                firstname: Yup.string().required(
+                user_id: Yup.string().required(
                     Lang.get('validation.required', {
-                        attribute: 'firstname',
+                        attribute: 'user_id',
                     }),
                 ),
-
-                lastname: Yup.string().required(
+                title: Yup.string().required(
                     Lang.get('validation.required', {
-                        attribute: 'lastname',
+                        attribute: 'title',
+                    }),
+                ),
+                description: Yup.string().required(
+                    Lang.get('validation.required', {
+                        attribute: 'description',
+                    }),
+                ),
+                start_date: Yup.string().required(
+                    Lang.get('validation.required', {
+                        attribute: 'start_date',
+                    }),
+                ),
+                end_date: Yup.string().required(
+                    Lang.get('validation.required', {
+                        attribute: 'end_date',
+                    }),
+                ),
+                status: Yup.string().required(
+                    Lang.get('validation.required', {
+                        attribute: 'status',
                     }),
                 ),
             })}
@@ -72,6 +94,41 @@ const Profile = props => {
                 setFieldValue,
             }) => (
                 <Form>
+                    <Grid container spacing={24}>
+                        <Grid item xs={12} sm={12}>
+                            <FormControl
+                                className={classes.formControl}
+                                error={
+                                    submitCount > 0 &&
+                                    errors.hasOwnProperty('user_id')
+                                }
+                            >
+                                <InputLabel htmlFor="status">User</InputLabel>
+
+                                <Select
+                                    id="user_id"
+                                    name="user_id"
+                                    value={values.user_id}
+                                    onChange={handleChange}
+                                    input={<Input fullWidth />}
+                                    autoWidth
+                                >
+                                    <MenuItem value="">
+                                        Please select the user
+                                    </MenuItem>
+                                    {userDropdown}
+                                </Select>
+
+                                {submitCount > 0 &&
+                                    errors.hasOwnProperty('status') && (
+                                        <FormHelperText>
+                                            {errors.status}
+                                        </FormHelperText>
+                                    )}
+                            </FormControl>
+                        </Grid>
+                    </Grid>
+
                     <Grid container spacing={24}>
 
                         <Grid item xs={12} sm={12}>
@@ -119,7 +176,7 @@ const Profile = props => {
 
                                 <Input
                                     id="description"
-                                    name="Description"
+                                    name="description"
                                     value={values.description}
                                     onChange={handleChange}
                                     fullWidth
@@ -152,11 +209,10 @@ const Profile = props => {
                                             value={values.start_date}
                                             onChange={date => setFieldValue('start_date', date)}
                                             format="YYYY-MM-DD"
-                                            // Prevent selection of dates before today
                                             minDate={moment().format('YYYY-MM-DD')}
                                             keyboard
                                             clearable
-                                            disableFuture={false} // Allow future dates
+                                            disableFuture={false}
                                         />
                                     </MuiPickersUtilsProvider>
 
@@ -217,9 +273,9 @@ const Profile = props => {
                                         Please select the status
                                     </MenuItem>
 
-                                    <MenuItem value="female">Pending</MenuItem>
-                                    <MenuItem value="male">In Progress</MenuItem>
-                                    <MenuItem value="male">Completed</MenuItem>
+                                    <MenuItem value="pending">Pending</MenuItem>
+                                    <MenuItem value="in_progress">In Progress</MenuItem>
+                                    <MenuItem value="completed">Completed</MenuItem>
 
                                 </Select>
 

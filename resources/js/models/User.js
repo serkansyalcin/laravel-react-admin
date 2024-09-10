@@ -105,4 +105,22 @@ export default class User {
 
         return response.data;
     }
+    /**
+     * Fetch all users.
+     *
+     * @param {object} params
+     *
+     * @return {object}
+     */
+    static async all(params = {}) {
+        const response = await axios.get('/api/v1/all-users', {
+            params,
+        });
+
+        if (response.status !== 200) {
+            return {};
+        }
+
+        return response.data;
+    }
 }

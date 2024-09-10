@@ -1,32 +1,28 @@
 import React, { useState, useEffect, useContext } from 'react';
 
 import {
-    Avatar,
-    Grid,
     IconButton,
     Tooltip,
-    Typography,
 } from '@material-ui/core';
 
 import {
     Delete as DeleteIcon,
     Edit as EditIcon,
-    Image as ImageIcon,
 } from '@material-ui/icons';
 
-import * as RandomUtils from '../../../helpers/Random';
 import * as NavigationUtils from '../../../helpers/Navigation';
 import * as UrlUtils from '../../../helpers/URL';
 import { Table } from '../../../ui';
 import { Master as MasterLayout } from '../layouts';
 import { User } from '../../../models';
 import { AppContext } from '../../../AppContext';
+import Task from '../../../models/Task';
 
 function List(props) {
     const [loading, setLoading] = useState(false);
     const [pagination, setPagination] = useState({});
     const [sorting, setSorting] = useState({
-        by: 'name',
+        by: 'title',
         type: 'asc',
     });
     const [filters, setFilters] = useState({});
@@ -250,7 +246,7 @@ function List(props) {
                 ...newFilters,
             };
 
-            const pagination = await User.paginated(queryParams);
+            const pagination = await Task.paginated(queryParams);
 
             setLoading(false);
             setSorting({
@@ -363,11 +359,11 @@ function List(props) {
     ];
 
     const columns = [
-        { name: 'Name', property: 'name' },
+        { name: 'Title', property: 'title' },
         { name: 'Description', property: 'description', sort: true },
         { name: 'Status', property: 'status', sort: true },
-        { name: 'Start Date', property: 'status'},
-        { name: 'End Date', property: 'status'},
+        { name: 'Start Date', property: 'start_date'},
+        { name: 'End Date', property: 'end_date'},
         {
             name: 'Actions',
             property: 'actions',
@@ -378,62 +374,27 @@ function List(props) {
 
     const data =
         rawData &&
-        rawData.map(user => {
+        rawData.map(task => {
             return {
-                type: user.type,
-                name: (
-                    <Grid
-                        container
-                        direction="row"
-                        alignItems="center"
-                        wrap="nowrap"
-                    >
-                        <Grid item style={{ marginRight: 10 }}>
-                            {user.hasOwnProperty('thumbnail_url') &&
-                            user.thumbnail_url !== null ? (
-                                <Avatar
-                                    alt={user.name}
-                                    src={user.thumbnail_url}
-                                />
-                            ) : (
-                                <Avatar
-                                    style={{
-                                        fontSize: 17,
-                                        backgroundColor: RandomUtils.color(
-                                            user.firstname.length -
-                                            user.created_at.charAt(
-                                                user.created_at.length - 2,
-                                            ),
-                                        ),
-                                    }}
-                                >
-                                    <Typography>
-                                        {`${user.firstname.charAt(
-                                            0,
-                                        )}${user.lastname.charAt(0)}`}
-                                    </Typography>
-                                </Avatar>
-                            )}
-                        </Grid>
-
-                        <Grid item>{user.name}</Grid>
-                    </Grid>
-                ),
-                email: user.email,
+                title: task.title,
+                description: task.description,
+                status: task.status,
+                start_date: task.start_date,
+                end_date: task.end_date,
                 actions: (
                     <div style={{ width: 120, flex: 'no-wrap' }}>
                         <Tooltip
                             title={Lang.get('resources.edit', {
-                                name: 'User',
+                                name: 'Task',
                             })}
                         >
                             <IconButton
                                 onClick={() =>
                                     history.push(
                                         NavigationUtils.route(
-                                            'backoffice.resources.users.edit',
+                                            'backoffice.resources.tasks.edit',
                                             {
-                                                id: user.id,
+                                                id: task.id,
                                             },
                                         ),
                                     )
@@ -443,20 +404,18 @@ function List(props) {
                             </IconButton>
                         </Tooltip>
 
-                        {authUser.id !== user.id && (
-                            <Tooltip
-                                title={Lang.get('resources.delete', {
-                                    name: 'User',
-                                })}
+                        <Tooltip
+                            title={Lang.get('resources.delete', {
+                                name: 'Task',
+                            })}
+                        >
+                            <IconButton
+                                color="secondary"
+                                onClick={() => handleDeleteClick(task.id)}
                             >
-                                <IconButton
-                                    color="secondary"
-                                    onClick={() => handleDeleteClick(user.id)}
-                                >
-                                    <DeleteIcon />
-                                </IconButton>
-                            </Tooltip>
-                        )}
+                                <DeleteIcon />
+                            </IconButton>
+                        </Tooltip>
                     </div>
                 ),
             };
@@ -469,7 +428,6 @@ function List(props) {
             pageTitle={Lang.get('navigation.tasks')}
             primaryAction={primaryAction}
             tabs={tabs}
-            loading={loading}
             message={message}
             alert={alert}
         >
