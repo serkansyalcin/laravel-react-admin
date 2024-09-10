@@ -109,6 +109,28 @@ class TasksController extends Controller
         return response()->json($this->paginatedQuery($request));
     }
 
+
+    /**
+     * Update Task Status.
+     *
+     * @param Request $request
+     * @param Task $task
+     *
+     * @return JsonResponse
+     */
+    public function updateStatus(Request $request, Task $task): JsonResponse
+    {
+        $request->validate([
+            'status' => 'required',
+        ]);
+
+        $attributes = $request->all();
+        $task->fill($attributes);
+        $task->update();
+
+        return response()->json($task);
+    }
+
     /**
      * Get the paginated resource query.
      *
@@ -118,31 +140,31 @@ class TasksController extends Controller
      */
     protected function paginatedQuery(Request $request) : LengthAwarePaginator
     {
-        $users = Task::orderBy(
+        $tasks = Task::orderBy(
             $request->input('sortBy') ?? 'title',
             $request->input('sortType') ?? 'ASC'
         );
 
         if ($type = $request->input('title')) {
-            $this->filter($users, 'title', $type);
+            $this->filter($tasks, 'title', $type);
         }
 
         if ($name = $request->input('description')) {
-            $this->filter($users, 'description', $name);
+            $this->filter($tasks, 'description', $name);
         }
 
         if ($email = $request->input('start_date')) {
-            $this->filter($users, 'start_date', $email);
+            $this->filter($tasks, 'start_date', $email);
         }
 
         if ($email = $request->input('end_date')) {
-            $this->filter($users, 'end_date', $email);
+            $this->filter($tasks, 'end_date', $email);
         }
 
         if ($email = $request->input('status')) {
-            $this->filter($users, 'status', $email);
+            $this->filter($tasks, 'status', $email);
         }
 
-        return $users->paginate($request->input('perPage') ?? 10);
+        return $tasks->with('user')->paginate($request->input('perPage') ?? 10);
     }
 }

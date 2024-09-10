@@ -67,4 +67,14 @@ export default class Task {
 
         return response.data;
     }
+
+    static async updateStatus(id, attributes) {
+        const response = await axios.patch(`/api/v1/tasks-update-status/${id}`, attributes);
+
+        if (response.status !== 200) {
+            return {};
+        }
+
+        return response.data;
+    }
 }

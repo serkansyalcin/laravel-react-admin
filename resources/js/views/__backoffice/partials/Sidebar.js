@@ -120,6 +120,20 @@ function Sidebar(props) {
         },
 
         {
+            name: 'Kanban',
+            id: 'kanban',
+            links: [
+                {
+                    name: 'kanban',
+                    icon: <ShowChartIcon />,
+                    path: NavigationUtils.route(
+                        'backoffice.resources.kanban',
+                    ),
+                },
+            ],
+        },
+
+        {
             name: 'Analytics',
             id: 'analytics',
             links: [

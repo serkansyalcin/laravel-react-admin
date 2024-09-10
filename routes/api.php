@@ -41,6 +41,8 @@ Route::namespace('Api')->name('api.')->group(function () {
 
             Route::resource('users', 'UsersController', ['except' => ['edit', 'create']]);
             Route::resource('tasks', 'TasksController', ['except' => ['edit', 'create']]);
+            Route::patch('tasks-update-status/{task}', 'TasksController@updateStatus')->name('update-task-status');
+
             Route::get('all-users', 'UsersController@getAllUsers')->name('get-all-users');
 
             Route::prefix('users')->name('users.')->group(function () {
