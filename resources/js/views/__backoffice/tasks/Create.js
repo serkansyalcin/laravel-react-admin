@@ -12,10 +12,10 @@ import { Master as MasterLayout } from '../layouts';
 import { Profile, Account, Avatar } from './Forms';
 import Task from '../../../models/Task';
 import { User } from '../../../models';
+import * as NavigationUtils from '../../../helpers/Navigation';
 
 function Create(props) {
     const [loading, setLoading] = useState(false);
-    const [activeStep, setActiveStep] = useState(0);
     const [formValues, setFormValues] = useState([]);
     const [task, setTask] = useState({});
     const [message, setMessage] = useState({});
@@ -31,21 +31,21 @@ function Create(props) {
      * @return {undefined}
      */
     const handleSubmit = async (values, { setSubmitting, setErrors }) => {
-        console.log('im here');
         setSubmitting(false);
 
         setLoading(true);
 
         try {
-            let previousValues = {};
 
             // Instruct the API the current step.
-            values.step = activeStep;
-            const task = await Task.store({ ...previousValues, ...values });
+            const task = await Task.store(values);
 
             // After persisting the previous values. Move to the next step...
             let newFormValues = [...formValues];
-            newFormValues[activeStep] = values;
+
+            setLoading(false);
+            setFormValues(newFormValues);
+            setTask(task);
 
             setMessage({
                 type: 'success',
@@ -55,10 +55,12 @@ function Create(props) {
                 closed: () => setMessage({}),
             });
 
-            setLoading(false);
-            setFormValues(newFormValues);
-            setTask(task);
-            setActiveStep(activeStep + 1);
+            setTimeout(()  => {
+                history.push(
+                    NavigationUtils.route(
+                        'backoffice.resources.tasks.index',
+                    ));
+            }, 1000);
         } catch (error) {
             if (!error.response) {
                 throw new Error('Unknown error');
@@ -106,7 +108,7 @@ function Create(props) {
                         values={
                             formValues[0] ? formValues[0] : defaultProfileValues
                         }
-                        allUsers={users}
+                        allUsers={users.length ? users : []}
                         handleSubmit={handleSubmit}
                     />
                 )

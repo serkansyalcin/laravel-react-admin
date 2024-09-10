@@ -108,7 +108,7 @@ const Profile = props => {
                                 <Select
                                     id="user_id"
                                     name="user_id"
-                                    value={values.user_id}
+                                    value={values.user_id ? values.user_id : 0}
                                     onChange={handleChange}
                                     input={<Input fullWidth />}
                                     autoWidth

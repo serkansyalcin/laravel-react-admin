@@ -36,4 +36,35 @@ export default class Task {
 
         return response.data;
     }
+
+    static async delete(id) {
+        const response = await axios.delete(`/api/v1/tasks/${id}`);
+
+        if (response.status !== 200) {
+            return {};
+        }
+
+        return response.data;
+    }
+
+    static async show(id) {
+        const response = await axios.get(`/api/v1/tasks/${id}`);
+
+        if (response.status !== 200) {
+            return {};
+        }
+
+        return response.data;
+    }
+
+
+    static async update(id, attributes) {
+        const response = await axios.patch(`/api/v1/tasks/${id}`, attributes);
+
+        if (response.status !== 200) {
+            return {};
+        }
+
+        return response.data;
+    }
 }

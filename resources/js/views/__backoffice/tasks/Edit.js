@@ -4,41 +4,50 @@ import {
     CircularProgress,
     Grid,
     Paper,
-    Step,
-    StepLabel,
-    Stepper,
     Typography,
     withStyles,
 } from '@material-ui/core';
 
 import * as UrlUtils from '../../../helpers/URL';
-import * as NavigationUtils from '../../../helpers/Navigation';
-import { User } from '../../../models';
-import { LinearIndeterminate } from '../../../ui/Loaders';
 import { Master as MasterLayout } from '../layouts';
-
-import { Profile, Account, Avatar } from './Forms';
+import { Profile } from './Forms';
+import Task from '../../../models/Task';
+import { User } from '../../../models';
+import * as NavigationUtils from '../../../helpers/Navigation';
 
 function Edit(props) {
     const [loading, setLoading] = useState(false);
-    const [activeStep, setActiveStep] = useState(0);
     const [formValues, setFormValues] = useState([]);
+    const [task, setTask] = useState({});
     const [user, setUser] = useState({});
     const [message, setMessage] = useState({});
+    const { classes, ...other } = props;
+    const { history } = props;
 
     /**
-     * Fetch the user.
+     * Fetch the task.
      *
      * @param {number} id
      *
      * @return {undefined}
      */
-    const fetchUser = async id => {
+    const fetchTask = async id => {
         setLoading(true);
 
         try {
-            const user = await User.show(id);
+            const task = await Task.show(id);
+            setTask(task);
+            setLoading(false);
+        } catch (error) {
+            setLoading(false);
+        }
+    };
 
+    const fetchUser = async () => {
+        setLoading(true);
+
+        try {
+            const user = await User.all();
             setUser(user);
             setLoading(false);
         } catch (error) {
@@ -47,20 +56,9 @@ function Edit(props) {
     };
 
     /**
-     * This should return back to the previous step.
-     *
-     * @return {undefined}
-     */
-    const handleBack = () => {
-        setActiveStep(activeStep - 1);
-    };
-
-    /**
-     * Handle form submit, this should send an API response
-     * to create a user.
+     * Handle form submit, this should send an API response to create a user.
      *
      * @param {object} values
-     *
      * @param {object} form
      *
      * @return {undefined}
@@ -68,49 +66,31 @@ function Edit(props) {
     const handleSubmit = async (values, { setSubmitting, setErrors }) => {
         setSubmitting(false);
 
-        // Stop here as it is the last step...
-        if (activeStep === 2) {
-            return;
-        }
-
         setLoading(true);
 
         try {
-            let previousValues = {};
+            await Task.update(task.id, {...values});
 
-            // Merge the form values here.
-            if (activeStep === 1) {
-                previousValues = formValues.reduce((prev, next) => {
-                    return { ...prev, ...next };
-                });
-            }
-
-            // Instruct the API the current step.
-            values.step = activeStep;
-
-            const updatedUser = await User.update(user.id, {
-                ...previousValues,
-                ...values,
-            });
-
-            // After persisting the previous values. Move to the next step...
             let newFormValues = [...formValues];
-            newFormValues[activeStep] = values;
-
-            if (activeStep === 1) {
-                setMessage({
-                    type: 'success',
-                    body: Lang.get('resources.updated', {
-                        name: 'User',
-                    }),
-                    closed: () => setMessage({}),
-                });
-            }
 
             setLoading(false);
             setFormValues(newFormValues);
             setUser(user);
-            setActiveStep(activeStep + 1);
+            setTask(task)
+            setMessage({
+                type: 'success',
+                body: Lang.get('resources.updated', {
+                    name: 'Task',
+                }),
+                closed: () => setMessage({}),
+            });
+
+            setTimeout(()  => {
+                history.push(
+                    NavigationUtils.route(
+                        'backoffice.resources.tasks.index',
+                    ));
+            }, 1000);
         } catch (error) {
             if (!error.response) {
                 throw new Error('Unknown error');
@@ -123,28 +103,16 @@ function Edit(props) {
             setLoading(false);
         }
     };
-
     useEffect(() => {
         if (Object.keys(user).length > 0) {
             return;
         }
 
         const { params } = props.match;
-        const { location } = props;
 
-        const queryParams = UrlUtils.queryParams(location.search);
-
-        if (queryParams.hasOwnProperty('step')) {
-            setActiveStep(parseInt(queryParams.step));
-        }
-
-        fetchUser(params.id);
-    });
-
-    const { classes, ...other } = props;
-    const { history } = props;
-
-    const steps = ['Profile', 'Account', 'Avatar'];
+        fetchTask(params.id);
+        fetchUser();
+    }, [user, props.match, props.location]); // Adding dependencies
 
     const renderLoading = (
         <Grid
@@ -159,66 +127,7 @@ function Edit(props) {
         </Grid>
     );
 
-    const renderForm = () => {
-        if (loading) {
-            return renderLoading;
-        }
-
-        const defaultProfileValues = {
-            firstname: user.firstname === null ? '' : user.firstname,
-            middlename: user.middlename === null ? '' : user.middlename,
-            lastname: user.lastname === null ? '' : user.lastname,
-            gender: user.gender === null ? '' : user.gender,
-            birthdate: user.birthdate,
-            address: user.address === null ? '' : user.address,
-        };
-
-        switch (activeStep) {
-            case 0:
-                return (
-                    <Profile
-                        {...other}
-                        values={
-                            formValues[0] ? formValues[0] : defaultProfileValues
-                        }
-                        handleSubmit={handleSubmit}
-                    />
-                );
-
-            case 1:
-                return (
-                    <Account
-                        {...other}
-                        values={{
-                            type: user.type === null ? '' : user.type,
-                            email: user.email === null ? '' : user.email,
-                            username:
-                                user.username === null ? '' : user.username,
-                        }}
-                        handleSubmit={handleSubmit}
-                        handleBack={handleBack}
-                    />
-                );
-
-            case 2:
-                return (
-                    <Avatar
-                        {...other}
-                        user={user}
-                        handleSkip={() =>
-                            history.push(
-                                NavigationUtils.route(
-                                    'backoffice.resources.users.index',
-                                ),
-                            )
-                        }
-                    />
-                );
-
-            default:
-                throw new Error('Unknown step!');
-        }
-    };
+    if (loading) return  renderLoading;
 
     return (
         <MasterLayout
@@ -228,7 +137,7 @@ function Edit(props) {
             message={message}
         >
             <div className={classes.pageContentWrapper}>
-                {loading && <LinearIndeterminate />}
+                {loading && <CircularProgress color="primary" />}
 
                 <Paper>
                     <div className={classes.pageContent}>
@@ -238,21 +147,23 @@ function Edit(props) {
                             align="center"
                             gutterBottom
                         >
-                            User Modification
+                            Task Modification
                         </Typography>
-
-                        <Stepper
-                            activeStep={activeStep}
-                            className={classes.stepper}
-                        >
-                            {steps.map(name => (
-                                <Step key={name}>
-                                    <StepLabel>{name}</StepLabel>
-                                </Step>
-                            ))}
-                        </Stepper>
-
-                        {renderForm()}
+                        <Profile
+                            {...other}
+                            allUsers={user.length ? user : []}
+                            values={
+                                formValues[0] ? formValues[0] : {
+                                    title: task.title ? task.title : '',
+                                    description: task.description ? task.description : '',
+                                    status: task.status ? task.status : '',
+                                    start_date: task.start_date ? task.start_date : '',
+                                    end_date: task.end_date ? task.end_date : '',
+                                    user_id: task.user_id ? task.user_id : ''
+                                }
+                            }
+                            handleSubmit={handleSubmit}
+                        />
                     </div>
                 </Paper>
             </div>

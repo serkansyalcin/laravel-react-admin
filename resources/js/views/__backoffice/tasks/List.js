@@ -37,7 +37,7 @@ function List(props) {
      *
      * @return {undefined}
      */
-    const handleDeleteClick = resourceId => {
+    const handleDeleteClick = taskId => {
         setAlert({
             type: 'confirmation',
             title: Lang.get('resources.delete_confirmation_title', {
@@ -47,7 +47,7 @@ function List(props) {
                 name: 'Task',
             }),
             confirmText: Lang.get('actions.continue'),
-            confirmed: async () => await deleteUser(resourceId),
+            confirmed: async () => await deleteTask(taskId),
             cancelled: () => setAlert({}),
         });
     };
@@ -186,11 +186,11 @@ function List(props) {
      *
      * @return {undefined}
      */
-    const deleteUser = async resourceId => {
+    const deleteTask = async taskId => {
         setLoading(true);
 
         try {
-            const pagination = await User.delete(resourceId);
+            const pagination = await Task.delete(taskId);
 
             setLoading(false);
             setPagination(pagination);
@@ -202,7 +202,7 @@ function List(props) {
                 }),
                 closed: () => setMessage({}),
                 actionText: Lang.get('actions.undo'),
-                action: () => restoreUser(resourceId),
+                action: () => {},
             });
         } catch (error) {
             setLoading(false);
@@ -214,7 +214,7 @@ function List(props) {
                 }),
                 closed: () => setMessage({}),
                 actionText: Lang.get('actions.retry'),
-                action: () => deleteUser(resourceId),
+                action: () => deleteTask(taskId),
             });
         }
     };
@@ -372,13 +372,22 @@ function List(props) {
         },
     ];
 
+    const readableStatus = (status) => {
+        const statusMap = {
+            'in_progress': 'In Progress',
+            'completed': 'Completed',
+            'pending': 'Pending'
+        };
+        return statusMap[status] || status;
+    };
+
     const data =
         rawData &&
         rawData.map(task => {
             return {
                 title: task.title,
                 description: task.description,
-                status: task.status,
+                status: readableStatus(task.status),
                 start_date: task.start_date,
                 end_date: task.end_date,
                 actions: (
