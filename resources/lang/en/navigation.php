@@ -57,6 +57,7 @@ return [
     'resources' => 'Resources',
     'users' => 'Users',
     'roles' => 'Roles',
+    'tasks' => 'Tasks',
 
     'citation' => 'Built with ❤️ by'
 ];

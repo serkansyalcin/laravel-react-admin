@@ -1,6 +1,8 @@
 import { Home } from '../views/__backoffice';
 import * as Settings from '../views/__backoffice/settings';
 import * as Users from '../views/__backoffice/users';
+import * as Tasks from '../views/__backoffice/tasks';
+import * as kanbanDashboard from '../views/__backoffice/kanbanDashboard';
 
 const resources = [
     {
@@ -19,6 +21,27 @@ const resources = [
         name: 'users.edit',
         path: '/users/:id/edit',
         component: Users.Edit,
+    },
+    {
+        name: 'tasks.index',
+        path: '/tasks',
+        component: Tasks.List,
+    },
+
+    {
+        name: 'tasks.create',
+        path: '/tasks/create',
+        component: Tasks.Create,
+    },
+    {
+        name: 'tasks.edit',
+        path: '/tasks/:id/edit',
+        component: Tasks.Edit,
+    },
+    {
+        name: 'kanban',
+        path: '/kanban',
+        component: kanbanDashboard.kanban,
     },
 ].map(route => {
     route.name = `resources.${route.name}`;
